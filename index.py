@@ -1,3 +1,5 @@
+import os
+from sendEmail import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -17,24 +19,28 @@ shutil.rmtree('files', ignore_errors=True)
 shutil.rmtree('images', ignore_errors=True)
 
 diretorio_atual = os.path.dirname(os.path.realpath(__file__))
-download_directory = os.path.join(diretorio_atual, "files") 
+download_directory = os.path.join(diretorio_atual, "files")
 sistema_operacional = platform.system()
-meses = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+meses = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+         7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+
 
 def encontrar_elemento(by, value, driver, timeout=20):
     return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value)))
 
+
 def clicar_elemento(elemento, driver, timeout=20):
     return WebDriverWait(driver, timeout).until(EC.element_to_be_clickable(elemento))
 
-credenciaisOracle ={
+
+credenciaisOracle = {
     "user": "IRIZZO",
     "password": "X3051Ukv*£9="
 }
 
 codigo_sql = [
-    ## criação de conta por mes
-     """select ms.mes,
+    # criação de conta por mes
+    """select ms.mes,
        coalesce(count(distinct clogger.cd_cpfcgc), 0) as aberturas_conta
   from (select column_value as mes from table(sys.odcivarchar2list('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'))) ms
   left join veritas_silver.sinacor_tsclogger clogger
@@ -44,7 +50,7 @@ codigo_sql = [
  group by ms.mes
  order by to_number(ms.mes);""",
 
- ## criação de conta hora a hora dia anterior
+    # criação de conta hora a hora dia anterior
     """select h.hora,
        coalesce(count(distinct cd_cpfcgc),0) as aberturas_conta
   from (
@@ -59,10 +65,10 @@ codigo_sql = [
  group by h.hora
  order by h.hora;""",
 
-## criação de conta histórico, 3, 7 e 30 dias uteis
+    # criação de conta histórico, 3, 7 e 30 dias uteis
     """select h.hora,
-       case when d3.aberturas_conta is null and d1.aberturas_conta is null then 0 else (1-coalesce(d3.aberturas_conta, 0)/coalesce(d1.aberturas_conta, 1)) end as DU3, 
-       case when d7.aberturas_conta is null and d1.aberturas_conta is null then 0 else (1-coalesce(d7.aberturas_conta, 0)/coalesce(d1.aberturas_conta, 1)) end as DU7, 
+       case when d3.aberturas_conta is null and d1.aberturas_conta is null then 0 else (1-coalesce(d3.aberturas_conta, 0)/coalesce(d1.aberturas_conta, 1)) end as DU3,
+       case when d7.aberturas_conta is null and d1.aberturas_conta is null then 0 else (1-coalesce(d7.aberturas_conta, 0)/coalesce(d1.aberturas_conta, 1)) end as DU7,
        case when d30.aberturas_conta is null and d1.aberturas_conta is null then 0 else (1-coalesce(d30.aberturas_conta, 0)/coalesce(d1.aberturas_conta, 1)) end as DU30
 from (
     select level - 1 as hora
@@ -74,7 +80,7 @@ left join (
         count(distinct cd_cpfcgc) as aberturas_conta
     from veritas_silver.sinacor_tsclogger
     where to_char(dt_ocorrencia, 'YYYY-MM-DD') = (
-                                                    select case 
+                                                    select case
                                                             when calendar_iso_weekday = 7 then to_char(trunc(sysdate) - 3, 'YYYY-MM-DD')
                                                             when calendar_iso_weekday = 6 then to_char(trunc(sysdate) - 2, 'YYYY-MM-DD')
                                                             when is_holiday = 'True' then to_char(trunc(sysdate) - 2, 'YYYY-MM-DD')
@@ -93,7 +99,7 @@ left join (
         count(distinct cd_cpfcgc) as aberturas_conta
     from veritas_silver.sinacor_tsclogger
     where to_char(dt_ocorrencia, 'YYYY-MM-DD') = (
-                                                    select case 
+                                                    select case
                                                             when calendar_iso_weekday = 7 then to_char(trunc(sysdate) - 5, 'YYYY-MM-DD')
                                                             when calendar_iso_weekday = 6 then to_char(trunc(sysdate) - 4, 'YYYY-MM-DD')
                                                             when is_holiday = 'True' then to_char(trunc(sysdate) - 4, 'YYYY-MM-DD')
@@ -112,7 +118,7 @@ left join (
         count(distinct cd_cpfcgc) as aberturas_conta
     from veritas_silver.sinacor_tsclogger
     where to_char(dt_ocorrencia, 'YYYY-MM-DD') = (
-                                                    select case 
+                                                    select case
                                                             when calendar_iso_weekday = 7 then to_char(trunc(sysdate) - 9, 'YYYY-MM-DD')
                                                             when calendar_iso_weekday = 6 then to_char(trunc(sysdate) - 8, 'YYYY-MM-DD')
                                                             when is_holiday = 'True' then to_char(trunc(sysdate) - 8, 'YYYY-MM-DD')
@@ -131,7 +137,7 @@ left join (
         count(distinct cd_cpfcgc) as aberturas_conta
     from veritas_silver.sinacor_tsclogger
     where to_char(dt_ocorrencia, 'YYYY-MM-DD') = (
-                                                    select case 
+                                                    select case
                                                             when calendar_iso_weekday = 7 then to_char(trunc(sysdate) - 32, 'YYYY-MM-DD')
                                                             when calendar_iso_weekday = 6 then to_char(trunc(sysdate) - 31, 'YYYY-MM-DD')
                                                             when is_holiday = 'True' then to_char(trunc(sysdate) - 31, 'YYYY-MM-DD')
@@ -147,7 +153,7 @@ left join (
 on h.hora = d30.hora
 order by h.hora""",
 
-## onboarding x suitability
+    # onboarding x suitability
     """select mes_criacao as mes,
        round(sum(com_api * case when gap_preenchido = 0 then 1 end)/(sum(sem_api)+sum(com_api))*100, 2) as M0,
        round(sum(com_api * case when gap_preenchido = 1 then 1 end)/(sum(sem_api)+sum(com_api))*100, 2) as M1,
@@ -159,7 +165,7 @@ order by h.hora""",
        round(sum(sem_api)/(sum(sem_api)+sum(com_api))*100, 2) as NR
   from (
         select extract(month from dt_criacao) as mes_criacao,
-            sum(case when perfil is null or perfil like '%Sem Perfil%' then 1 else 0 end) as sem_api, 
+            sum(case when perfil is null or perfil like '%Sem Perfil%' then 1 else 0 end) as sem_api,
             sum(case when perfil like '%Conservador%' or perfil like '%Moderado%' or perfil like '%Arrojado%' then 1 else 0 end) as com_api,
             trunc(months_between(dt_atualiz, dt_criacao)) as gap_preenchido
         from veritas_gold.vw_cliente
@@ -176,7 +182,7 @@ order by h.hora""",
 
 print('O código está sendo execultado...')
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 chrome_options.add_experimental_option("prefs", {
     "download.default_directory": download_directory,
     "download.prompt_for_download": False,
@@ -199,37 +205,43 @@ botao = encontrar_elemento(By.ID, "submitform-button", driver)
 botao.click()
 elemento_a = encontrar_elemento(By.ID, "WORKSHEET", driver)
 elemento_a.click()
-botao_fechar = encontrar_elemento(By.CLASS_NAME, "hopscotch-bubble-close", driver)
+botao_fechar = encontrar_elemento(
+    By.CLASS_NAME, "hopscotch-bubble-close", driver)
 botao_fechar.click()
 editor_sql = encontrar_elemento(By.CLASS_NAME, "view-lines", driver)
 if editor_sql:
-   for i, query in enumerate(codigo_sql):
+    for i, query in enumerate(codigo_sql):
         editor_sql.click()
         if sistema_operacional == 'Darwin':
-            ActionChains(driver).key_down(Keys.COMMAND).send_keys('a').key_up(Keys.COMMAND).perform()
+            ActionChains(driver).key_down(Keys.COMMAND).send_keys(
+                'a').key_up(Keys.COMMAND).perform()
         elif sistema_operacional == 'Windows':
-            ActionChains(driver).key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+            ActionChains(driver).key_down(Keys.CONTROL).send_keys(
+                'a').key_up(Keys.CONTROL).perform()
         ActionChains(driver).send_keys(Keys.DELETE).perform()
         ActionChains(driver).send_keys(query).perform()
-        clicar_elemento((By.ID, "code-editor-btn-run-statement"), driver).click()
+        clicar_elemento(
+            (By.ID, "code-editor-btn-run-statement"), driver).click()
         try:
-            clicar_elemento((By.ID, "download-query-menu-button"), driver).click()
+            clicar_elemento(
+                (By.ID, "download-query-menu-button"), driver).click()
             clicar_elemento((By.ID, "download-menu-csv"), driver).click()
             sleep(1)
             driver.switch_to.window(driver.window_handles[0])
-            while any([".crdownload" in filename for filename in os.listdir(download_directory)]):
+            while any([".crdownload" in filename or ".tmp" in filename for filename in os.listdir(download_directory)]):
                 sleep(1)
             os.chdir(download_directory)
-            sleep(0.5)
+            sleep(3)
             cont = 0
             filenames = os.listdir(".")
             for filename in filenames:
-                 if filename.endswith(".csv"):
+                if filename.endswith(".csv"):
                     cont += 1
                     novo_nome = f"query_{i+1}_arquivo_{cont}.csv"
                     if novo_nome == "query_4_arquivo_4.csv":
-                        novo_nome = "query_4_arquivo_4.csv" 
-                    os.rename(os.path.join(download_directory, filename), os.path.join(download_directory, novo_nome))
+                        novo_nome = "query_4_arquivo_4.csv"
+                    os.rename(os.path.join(download_directory, filename),
+                              os.path.join(download_directory, novo_nome))
         except TimeoutException:
             print("Elemento não encontrado")
 
@@ -241,16 +253,19 @@ if not os.path.exists(output_directory):
 
 
 if sistema_operacional == 'Darwin':
-    df1 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_1.csv'))
+    df1 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_1.csv'))
 elif sistema_operacional == 'Windows':
-    df1 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_2.csv'))
+    df1 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_2.csv'))
 plt.figure(figsize=(10, 6))
 plt.plot(df1['HORA'], df1['DU3'], label='DU3')
 plt.plot(df1['HORA'], df1['DU7'], label='DU7')
 plt.plot(df1['HORA'], df1['DU30'], label='DU30')
 plt.xlabel('Hora')
 plt.ylabel('%')
-plt.title('ABERTURA DE CONTA - COMPARAÇÃO DIAS UTEIS', color='#14c770', size=17, fontweight='bold')
+plt.title('ABERTURA DE CONTA - COMPARAÇÃO DIAS UTEIS',
+          color='#14c770', size=17, fontweight='bold')
 plt.xticks(range(24))
 plt.legend()
 plt.savefig(os.path.join(output_directory, 'ABERTURA_CONTA_HIST.png'))
@@ -258,14 +273,17 @@ plt.savefig(os.path.join(output_directory, 'ABERTURA_CONTA_HIST.png'))
 plt.figure()
 
 if sistema_operacional == 'Darwin':
-    df2 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_2.csv'))
+    df2 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_2.csv'))
 elif sistema_operacional == 'Windows':
-    df2 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_3.csv'))
+    df2 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_3.csv'))
 plt.figure(figsize=(10, 6))
 plt.bar(df2['HORA'], df2['ABERTURAS_CONTA'], color='#14c770', width=0.9)
 plt.xlabel('Hora')
 plt.ylabel('Aberturas de Conta')
-plt.title('ABERTURA DE CONTA HORA A HORA - ONTEM', color='#14c770', size=17, fontweight='bold')
+plt.title('ABERTURA DE CONTA HORA A HORA - ONTEM',
+          color='#14c770', size=17, fontweight='bold')
 plt.xticks(range(24))
 for i, v in enumerate(df2['ABERTURAS_CONTA']):
     plt.text(i, v/2, str(v), ha='center', va='center', color='white')
@@ -274,24 +292,29 @@ plt.savefig(os.path.join(output_directory, 'ABERTURA_CONTA_HORA.png'))
 plt.figure()
 
 if sistema_operacional == 'Darwin':
-    df3 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_3.csv'))
+    df3 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_3.csv'))
 elif sistema_operacional == 'Windows':
-    df3 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_4.csv'))
+    df3 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_4.csv'))
 plt.figure(figsize=(10, 6))
 plt.bar(df3['MES'], df3['ABERTURAS_CONTA'], color='#14c770', width=0.9)
 plt.xlabel('Mes')
 plt.ylabel('Aberturas de Conta')
 plt.xticks(range(1, 13))
-plt.title('ABERTURA DE CONTA MES A MES', color='#14c770', size=17, fontweight='bold')
+plt.title('ABERTURA DE CONTA MES A MES',
+          color='#14c770', size=17, fontweight='bold')
 for i, v in enumerate(df3['ABERTURAS_CONTA']):
-    if not pd.isnull(v): 
+    if not pd.isnull(v):
         plt.text(i+1, v/2, str(v), ha='center', va='center', color='black')
 plt.savefig(os.path.join(output_directory, 'ABERTURA_CONTA_MES.png'))
 
 if sistema_operacional == 'Darwin':
-    df4 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_4.csv'))
+    df4 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_4.csv'))
 elif sistema_operacional == 'Windows':
-    df4 = pd.read_csv(os.path.join(download_directory, 'query_4_arquivo_1.csv'))
+    df4 = pd.read_csv(os.path.join(
+        download_directory, 'query_4_arquivo_1.csv'))
 df4 = df4.loc[:, ~df4.columns.str.contains('^Unnamed')]
 df4['M0'] = df4['M0'].fillna('')
 df4['M1'] = df4['M1'].fillna('')
@@ -303,7 +326,8 @@ df4['M6'] = df4['M6'].fillna('')
 df4['MES'] = df4['MES'].map(meses)
 fig, ax = plt.subplots(figsize=(12, 4))
 ax.axis('off')
-table = ax.table(cellText=df4.values, colLabels=df4.columns, cellLoc='center', loc='center')
+table = ax.table(cellText=df4.values, colLabels=df4.columns,
+                 cellLoc='center', loc='center')
 
 for i in range(0, len(df4)+1):
     for j in range(len(df4.columns)):
@@ -313,12 +337,24 @@ for i in range(0, len(df4)+1):
             cell._text.set_color('white')
             cell.set_facecolor('#14c770')
             cell._text.set_fontweight('bold')
-        if j != 0 and i >= 1: 
+        if j != 0 and i >= 1:
             cell_text = cell.get_text().get_text()
-            if cell_text: 
+            if cell_text:
                 cell_text = f"{cell_text}%"
                 cell.get_text().set_text(cell_text)
 
-ax.set_title('ONBOARDING x SUITABILITY', color='#14c770', size=17, fontweight='bold')
+ax.set_title('ONBOARDING x SUITABILITY',
+             color='#14c770', size=17, fontweight='bold')
 
-plt.savefig(os.path.join(output_directory, 'SUITABILITY.png'), bbox_inches='tight', pad_inches=0.5)
+plt.savefig(os.path.join(output_directory, 'SUITABILITY.png'),
+            bbox_inches='tight', pad_inches=0.5)
+
+sleep(3)
+
+send_message(
+    destination="italo.rizzo@picpay.com",
+    destination_cc='anderson.santos@picpay.com',
+    subject="Teste",
+    body="Teste envio de e-mail",
+    attachments=[f'./images/{x}' for x in os.listdir('./images')]
+)
