@@ -182,7 +182,7 @@ order by h.hora""",
 
 print('O código está sendo execultado...')
 chrome_options = Options()
-# chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_experimental_option("prefs", {
     "download.default_directory": download_directory,
     "download.prompt_for_download": False,
@@ -349,12 +349,13 @@ ax.set_title('ONBOARDING x SUITABILITY',
 plt.savefig(os.path.join(output_directory, 'SUITABILITY.png'),
             bbox_inches='tight', pad_inches=0.5)
 
-sleep(3)
+sleep(10)
 
 send_message(
     destination="italo.rizzo@picpay.com",
-    destination_cc='anderson.santos@picpay.com',
+    destination_cc='',
     subject="Teste",
     body="Teste envio de e-mail",
     attachments=[f'./images/{x}' for x in os.listdir('./images')]
 )
+
